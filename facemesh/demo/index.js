@@ -109,6 +109,27 @@ async function setupCamera() {
   });
 }
 
+async function writeLandmarks(landmarks) {
+  var saveData = (function () {
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    return function (data, fileName) {
+      var json = JSON.stringify(data),
+        blob = new Blob([json], { type: "octet/stream" }),
+        url = window.URL.createObjectURL(blob);
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    };
+  }());
+
+  var time = (new Date()).getTimezoneOffset();
+  var fileName = `Mediapipe_Landmarks${time}.json`;
+  saveData(landmarks, fileName);
+}
+
 async function renderPrediction() {
   stats.begin();
 
@@ -119,6 +140,8 @@ async function renderPrediction() {
   if (predictions.length > 0) {
     predictions.forEach(prediction => {
       const keypoints = prediction.scaledMesh;
+
+      writeLandmarks(keypoints);
 
       if (state.triangulateMesh) {
         for (let i = 0; i < TRIANGULATION.length / 3; i++) {
